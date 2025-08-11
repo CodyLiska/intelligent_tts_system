@@ -1,0 +1,61 @@
+### OS / editors
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*.swo
+
+### IDEs
+*.code-workspace
+*.iml
+.idea/
+.vs/
+
+### Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# dist/   # (still allowed to commit)
+# build/
+
+### Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+### .NET
+bin/
+obj/
+*.user
+*.suo
+
+### Java / Rust / Go
+target/
+.gradle/
+.gradle-cache/
+target/
+bin/
+
+### Logs
+*.log
+*.stackdump
+
+### Secrets (KEEP PRIVATE KEYS IGNORED)
+# .env is ALLOWED in this variant:
+# .env
+# .env.*
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa
+id_ecdsa
+# *.sqlite
+# *.db
+# *.bak

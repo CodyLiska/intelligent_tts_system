@@ -1,0 +1,20 @@
+# core
+numpy==1.26.4
+soundfile==0.12.1
+
+# text extraction
+pymupdf==1.24.9
+pypdf==4.3.1
+ebooklib==0.18
+beautifulsoup4==4.12.3
+
+# NLP
+nltk==3.9.1
+textgrid==1.6.1
+
+# tts
+kokoro>=0.9.4
+
+# optional api
+fastapi==0.112.2
+uvicorn[standard]==0.30.6

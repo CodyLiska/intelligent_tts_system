@@ -1,0 +1,4 @@
+1
+00:00:00,320 --> 00:00:03,950
+This is a short test for aeneas alignment. It has two sentences.
+
