@@ -9,7 +9,6 @@
 ## Plan to continue
 1. Testing on Windows side is complete, works perfect using Kokoro and will never use CosyVoice2.
 2. Need to test on MacBook Pro to see how CosyVoice2 works.
-3. 
 
 
 # CURL COMMANDS for TESTING
