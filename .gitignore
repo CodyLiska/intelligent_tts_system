@@ -4,12 +4,20 @@ Desktop.ini
 .DS_Store
 *.swp
 *.swo
+*~
+.directory
+.Trash-*
+Icon?
+._*
 
 ### IDEs
 *.code-workspace
 *.iml
 .idea/
 .vs/
+.vscode/
+.project
+.pydevproject
 
 ### Node / JS
 node_modules/
@@ -18,16 +26,41 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# dist/   # (still allowed to commit)
-# build/
-
 ### Python
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.pyd
 .venv/
 venv/
+env/
+ENV/
+.env
+.env.*
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.mypy_cache/
+.pytest_cache/
+.coverage
+.tox/
+.nox/
 
 ### .NET
 bin/
@@ -39,23 +72,83 @@ obj/
 target/
 .gradle/
 .gradle-cache/
-target/
-bin/
 
 ### Logs
 *.log
 *.stackdump
+logs/
 
 ### Secrets (KEEP PRIVATE KEYS IGNORED)
-# .env is ALLOWED in this variant:
-# .env
-# .env.*
 *.pem
 *.key
 *.pfx
 *.p12
 id_rsa
 id_ecdsa
-# *.sqlite
-# *.db
-# *.bak
+config.json
+secrets.json
+
+### TTS-specific outputs & caches
+out/
+out_*/
+cache/
+.cache/
+bench_out/
+aligned/
+corpus/
+temp/
+tmp/
+*.cache
+
+### TTS model files (large files)
+third_party/CosyVoice/pretrained_models/
+CosyVoice/pretrained_models/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+models/
+weights/
+checkpoints/
+pretrained/
+
+### Audio & subtitle files (except reference files)
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.srt
+*.vtt
+*.ass
+*.TextGrid
+!data/refs/*.wav
+!data/inputs/*.wav
+
+### Development & testing files
+input.txt
+*.tmp.txt
+test_*.py
+*_test.py
+ai_help/
+dev_notes/
+scratch/
+*.tmp
+*.temp
+
+### MFA temporary files
+mfa_*/
+.mfa_*
+
+### Archive files
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+
+### Backup files
+*_copy.py
+*_backup.*
+*.bak

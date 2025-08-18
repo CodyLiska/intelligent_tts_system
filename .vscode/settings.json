@@ -1,5 +1,9 @@
 {
+  "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
   "python.analysis.extraPaths": [
-    "./app/utils"
-  ]
+    "./app/utils",
+    "third_party/CosyVoice",
+    "third_party/CosyVoice/third_party/Matcha-TTS"
+  ],
+  "taipyStudio.gUI.elementsFilePaths": []
 }

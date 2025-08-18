@@ -1,20 +1,34 @@
-# core
-numpy==1.26.4
-soundfile==0.12.1
+# Core dependencies
+numpy>=1.24.0,<2.0.0
+soundfile>=0.12.1
+torch>=2.0.0
+torchaudio>=2.0.0
+psutil>=5.9.0
 
-# text extraction
-pymupdf==1.24.9
-pypdf==4.3.1
-ebooklib==0.18
-beautifulsoup4==4.12.3
+# Text extraction and processing
+pymupdf>=1.24.0
+pypdf>=4.3.0
+ebooklib>=0.18
+beautifulsoup4>=4.12.0
+nltk>=3.9.0
+textgrid>=1.6.0
 
-# NLP
-nltk==3.9.1
-textgrid==1.6.1
-
-# tts
+# TTS engines
 kokoro>=0.9.4
 
-# optional api
-fastapi==0.112.2
-uvicorn[standard]==0.30.6
+# Web API framework
+fastapi>=0.112.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.6  # Required for FastAPI file uploads
+
+# Production server (optional)
+waitress>=2.1.0
+
+# MFA alignment (optional - install separately if needed)
+# montreal-forced-alignment>=3.0.0
+
+# CosyVoice2 dependencies (auto-installed when third_party models are present)
+# Note: These are automatically installed when CosyVoice2 models are detected
+# diffusers
+# transformers  
+# onnxruntime

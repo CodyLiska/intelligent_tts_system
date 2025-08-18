@@ -1,112 +1,137 @@
-# TTS Starter (Kokoro + FastAPI) — sentence-level subtitles
+# Intelligent TTS System
 
-A tiny, production-friendly starter that turns text, PDF, or ePub into high-quality audio with matching **sentence-level SRT subtitles** using the open-source **Kokoro** TTS model.
+An intelligent text-to-speech system that **automatically selects the optimal TTS engine** based on your hardware capabilities. Supports both **Kokoro** (fast, lightweight) and **CosyVoice2** (high-quality, resource-intensive) engines with professional-grade subtitle generation.
 
-> Why Kokoro? It’s fast, Apache-2.0 licensed, and great for long-form reading.
+## ✨ Key Features
 
----
+- 🧠 **Smart Engine Selection**: Automatically detects system capabilities and chooses the best TTS engine
+- ⚡ **Performance Optimized**: ~3 seconds synthesis on lower-end systems, high-quality output on powerful hardware
+- 📝 **Multiple Input Formats**: Text, PDF, ePub file uploads
+- 🎯 **Precise Subtitles**: MFA-aligned captions for short texts, duration-based for longer content
+- 🌐 **Multi-language Support**: Supports multiple languages and voice options
+- 💾 **Smart Caching**: Reduces re-synthesis time for repeated content
 
-## 1) Requirements
+## 🎯 System Intelligence
+
+The system automatically chooses:
+- **Kokoro** → GTX 970/lower-end systems (fast synthesis)
+- **CosyVoice2** → M4 MacBook Pro/high-end systems (premium quality)
+- **Optimized MFA alignment** → Based on text length and system capabilities
+
+## 📋 Requirements
 
 - Python 3.10–3.12
-- FFmpeg (recommended for audio tooling): https://ffmpeg.org/download.html
-- (Windows) Optional: install **espeak-ng** for best English fallback/multilingual text-to-phoneme support. See the Kokoro PyPI page for a Windows installer.
+- FFmpeg: https://ffmpeg.org/download.html
+- **For CosyVoice2**: 8GB+ VRAM or Apple Silicon with 16GB+ unified memory
+- **For MFA alignment**: Montreal Forced Alignment toolkit (optional)
 
-## 2) Setup
+## 🚀 Quick Start
 
 ```bash
+# Clone and setup
+git clone <your-repo>
+cd tts-starter
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-# macOS/Linux: source .venv/bin/activate
 
+# Windows
+.venv\Scripts\activate
+# macOS/Linux  
+source .venv/bin/activate
+
+# Install dependencies
 pip install --upgrade pip
-pip install kokoro
-pip install python-multipart
-pip instal soundfile numpy nltk pypdf pymupdf ebooklib textgrid psutil
 pip install -r requirements.txt
 ```
 
-## 3) Run the API
+## 🏃 Run the Server
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.api:app --reload
 ```
 
-Open http://127.0.0.1:8000/docs to try it.
+Open http://127.0.0.1:8000 for the web interface or http://127.0.0.1:8000/docs for API documentation.
 
-## 4) Endpoints
+## 🔧 API Endpoints
 
-- `POST /synthesize/text` — JSON body with `{ "text": "...", "voice": "af_heart", "speed": 1.0 }`
-- `POST /synthesize/file` — `multipart/form-data` with; `file (required)`, `voice (default af_heart)`, `speed (default 1.0)`, `lang_code (default a)`
+### Main Synthesis Endpoint
+`POST /synthesize`
+- **Engine**: `auto` (recommended), `kokoro`, or `cosyvoice2`
+- **Input**: Text or file upload (PDF, ePub, TXT)
+- **Output**: ZIP file containing `audio.wav` + `captions.srt`
 
-Both return a ZIP containing:
+### Additional Endpoints
+- `GET /recommended-engine` — Get recommended engine for current system
+- `GET /voices` — List available voices
+- `POST /synthesize/stream` — Streaming audio synthesis
 
-- `audio.wav` — the full concatenated audiobook-style audio
-- `subtitles.srt` — sentence-level subtitles aligned by measured audio durations
+## 🎛️ Configuration Options
 
-## 5) Notes on Voices & Language
+### Engine Selection
+- **auto** (recommended): Automatically selects optimal engine
+- **kokoro**: Fast, lightweight TTS (1-3 seconds)
+- **cosyvoice2**: High-quality TTS with voice cloning
 
-- Default voice is `af_heart` (American English). Set `lang_code='a'` for American English inside code.
-- You can change to other Kokoro voices by changing the `voice` parameter.
-- For multilingual needs, make sure to **match** `lang_code` (pipeline) and the voice used.
+### Voice Options (Kokoro)
+**American English**: `af_heart`, `af_bella`, `af_nicole`, `am_michael`, `am_eric`  
+**British English**: `bf_emma`, `bf_isabella`, `bm_george`, `bm_lewis`  
+**Other Languages**: Spanish, French, Japanese, Chinese, Hindi, Italian, Portuguese
 
 ### Parameters
+- **Speed**: 0.5-2.0 (speech rate multiplier)
+- **Alignment**: Enable/disable MFA for precise subtitles
+- **Post Filter**: Audio enhancement options
 
-#### voice (string)
+### CosyVoice2 Options
+- **Mode**: `cross`, `zero`, `auto`
+- **Reference Audio**: Upload custom voice samples
+- **Prompt**: Text description for voice characteristics
 
-⦁ Pick any Kokoro voice ID. A few good ones you can try right away:
+## 📊 Performance Benchmarks
 
-##### American English (lang_code: "a")
+| System | Engine | Text Length | Processing Time |
+|--------|--------|-------------|----------------|
+| GTX 970 | Kokoro | 800 words | ~3 seconds |
+| M4 MacBook Pro | CosyVoice2 | 800 words | ~8-12 seconds |
+| M4 MacBook Pro | Kokoro | 800 words | ~1-2 seconds |
 
-⦁ af_heart, af_bella, af_nicole, af_aoede, af_kore, af_sarah, af_nova, af_sky, af_alloy, af_jessica, af_river, am_michael, am_fenrir, am_puck, am_echo, am_eric, am_liam, am_onyx, am_santa, am_adam.
+## 🔧 Advanced Setup
 
-##### British English (lang_code: "b")
+### Environment Variables
+```bash
+# Force specific engine (overrides auto-detection)
+export COSY_DEVICE=cpu          # Force CosyVoice2 to CPU
+export COSY_DEVICE=gpu          # Force CosyVoice2 to GPU
 
-⦁ bf_emma, bf_isabella, bf_alice, bf_lily, bm_george, bm_fable, bm_lewis, bm_daniel.
+# Model directories
+export COSYVOICE_DIR=/path/to/CosyVoice
+export COSYVOICE2_DIR=/path/to/models
 
-⦁ (There are also voices for Japanese, Mandarin Chinese, Spanish, French, Hindi, Italian, and Brazilian Portuguese. See the full list in Kokoro’s VOICES.md.)
+# Cache settings
+export TTS_CACHE_DIR=./cache
+```
 
-#### speed (number)
+### CosyVoice2 Model Setup
+1. Download CosyVoice2 models to `third_party/CosyVoice/pretrained_models/`
+2. Ensure `cosyvoice2.yaml` is in the model directory
+3. Models are auto-detected at startup
 
-⦁ Speaking-rate multiplier. Typical usable range: 0.5 → 2.0 (0.5 = slower, 2.0 = faster). The official demo exposes exactly this range. Default in our starter: 1.0.
+## 🚨 Troubleshooting
 
-#### lang_code (string)
+### Common Issues
+- **CUDA OOM**: System automatically falls back to CPU or Kokoro
+- **MFA slow**: Disable alignment for long texts or upgrade system
+- **Missing models**: Check `third_party/CosyVoice/pretrained_models/`
 
-⦁ Language selector for the pipeline. This must match the voice’s language (Kokoro picks the pipeline from the first letter of the voice ID). Valid codes: - a = American English - b = British English - e = Spanish - f = French - h = Hindi - i = Italian - j = Japanese (requires misaki[ja])
--p = Brazilian Portuguese - z = Mandarin Chinese (requires misaki[zh])
+### Performance Tips
+- Use `auto` engine selection for optimal performance
+- Disable MFA alignment for texts >1000 characters on lower-end systems
+- Enable caching for frequently used text
 
-- (Why “match”? In the reference app, the pipeline is selected with pipelines[voice[0]], so if you pick bf_emma, you should use lang_code: "b", etc.)
+## 🗺️ Roadmap
 
-### Ready-to-copy request bodies
-
-⦁ American English (female) – Heart, normal speed
-⦁ `{ "text": "Chapter 1. Call me Ishmael.", "voice": "af_heart", "speed": 1.0, "lang_code": "a" }`
-
-⦁ American English (male) – Michael, slightly faster
-⦁ `{ "text": "Welcome to our show!", "voice": "am_michael", "speed": 1.2, "lang_code": "a" }`
-
-⦁ British English (female) – Emma, slower
-⦁ `{ "text": "Good evening, everyone.", "voice": "bf_emma", "speed": 0.9, "lang_code": "b" }`
-
-⦁ Spanish – Dora
-⦁ `{ "text": "Bienvenidos a la narración.", "voice": "ef_dora", "speed": 1.0, "lang_code": "e" }`
-
-⦁ Japanese – Alpha (install misaki[ja] first)
-⦁ `{ "text": "これはテストです。", "voice": "jf_alpha", "speed": 1.0, "lang_code": "j" }`
-
-⦁ Mandarin – Xiaoxiao (install misaki[zh] first)
-⦁ `{ "text": "这是一段测试语音。", "voice": "zf_xiaoxiao", "speed": 1.0, "lang_code": "z" }`
-
-## 6) Roadmap Upgrades (optional)
-
-- **Word-level timestamps**: integrate WhisperX (MIT) for alignment to generate word timings.
-- **Zero-shot cloning**: add a second engine (e.g., CosyVoice2) behind the same `TtsEngine` interface.
-- **Paragraph-level granularity**: switch the splitter to paragraph mode for fewer, longer captions.
-- **Streaming**: expose chunked synthesis via server-sent events or websockets for immediate playback.
-
----
-
-## Troubleshooting
-
-- If Kokoro complains about g2p/phoneme backend, install `espeak-ng` and restart the server.
-- Very long documents: try paragraph mode or paginate chapters to keep memory usage stable.
+- ✅ Smart engine selection
+- ✅ Dual engine support (Kokoro + CosyVoice2)
+- ✅ Intelligent MFA alignment
+- 🔄 Real-time streaming synthesis
+- 📋 Batch processing for multiple files
+- 🎨 Custom voice training integration

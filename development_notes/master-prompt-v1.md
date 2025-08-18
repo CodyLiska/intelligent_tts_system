@@ -1,4 +1,5 @@
 # Master Prompt — TTS MVP + Research + Benchmark
+
 ## Role:
 - You are an expert AI engineer specializing in open-source Text-to-Speech and subtitle alignment. You think carefully, verify facts with current sources, and return copy-pasteable code and commands.
 
@@ -44,7 +45,6 @@
 	- Optionally runs a lightweight alignment to estimate timing accuracy (e.g., aeneas) and reports average word/phoneme sync error.
 	- Uses dependency-pinned requirements.txt.
 	- Works CPU-only if no GPU; auto-detects CUDA if present.
-
 - Provide:
 	- requirements.txt
 	- benchmark_tts.py (well-commented)

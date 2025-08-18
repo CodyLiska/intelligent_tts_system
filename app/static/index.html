@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>TTS Starter</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: .6rem 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>TTS Starter</h1>
+  
+  <label>Text Input<br><textarea id="text" rows="5"
+      style="width:100%">This is a short test for aeneas alignment. It has two sentences.</textarea></label>
+  
+  <label>Or Upload File<br><input id="file" type="file" accept=".txt,.pdf,.epub"></label>
+
+  <label>Engine
+    <select id="engine">
+      <option value="auto" selected>auto (recommended)</option>
+      <option value="kokoro">kokoro</option>
+      <option value="cosyvoice2">cosyvoice2</option>
+    </select>
+  </label>
+  <div id="engineInfo" style="font-size: 0.8em; color: #666; margin-top: 5px;"></div>
+
+  <div id="kokoroOpts">
+    <label>Voice <input id="voice" value="af_heart"></label>
+  </div>
+
+  <div id="cosyOpts" style="display:none">
+    <label>Mode
+      <select id="cosy_mode">
+        <option>cross</option>
+        <option>zero</option>
+        <option>auto</option>
+      </select>
+    </label>
+    <label>Prompt <input id="cosy_prompt" placeholder="neutral, calm"></label>
+    <label>Reference WAV (16k mono) <input id="cosy_ref" type="file" accept=".wav"></label>
+  </div>
+
+  <label>Speed <input id="speed" type="number" step="0.1" value="1.0"></label>
+  <label><input id="align" type="checkbox" checked> Align captions (MFA)</label>
+  <label>Post filter
+    <select id="post">
+      <option value="">(none)</option>
+      <option value="brighten">brighten</option>
+    </select>
+  </label>
+
+  <button id="go">Synthesize</button>
+  <p id="status"></p>
+
+  <script>
+    const engineSel = document.getElementById('engine');
+    const cosyOpts = document.getElementById('cosyOpts');
+    const kokoroOpts = document.getElementById('kokoroOpts');
+    engineSel.addEventListener('change', () => {
+      const cosy = engineSel.value === 'cosyvoice2';
+      cosyOpts.style.display = cosy ? '' : 'none';
+      kokoroOpts.style.display = cosy ? 'none' : '';
+    });
+
+    document.getElementById('go').onclick = async () => {
+      const fd = new FormData();
+      
+      // Add file if selected, otherwise add text
+      const fileInput = document.getElementById('file');
+      if (fileInput.files[0]) {
+        fd.append('file', fileInput.files[0]);
+      } else {
+        fd.append('text', document.getElementById('text').value);
+      }
+      
+      fd.append('engine', engineSel.value);
+      fd.append('voice', document.getElementById('voice').value);
+      fd.append('speed', document.getElementById('speed').value);
+      fd.append('align', document.getElementById('align').checked ? 'true' : 'false');
+      fd.append('post', document.getElementById('post').value);
+
+      if (engineSel.value === 'cosyvoice2') {
+        fd.append('cosy_mode', document.getElementById('cosy_mode').value);
+        fd.append('cosy_prompt', document.getElementById('cosy_prompt').value);
+        const f = document.getElementById('cosy_ref').files[0];
+        if (f) fd.append('cosy_ref', f);
+      }
+
+      document.getElementById('status').textContent = 'Synthesizing...';
+      const res = await fetch('/synthesize', { method: 'POST', body: fd });
+      if (!res.ok) {
+        const t = await res.text();
+        document.getElementById('status').textContent = 'Error: ' + t;
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'tts_output.zip'; a.click();
+      URL.revokeObjectURL(url);
+      document.getElementById('status').textContent = 'Done. Zip downloaded.';
+    };
+
+    // Fetch and display recommended engine
+    async function updateEngineInfo() {
+      const engineSel = document.getElementById('engine');
+      const engineInfo = document.getElementById('engineInfo');
+      
+      if (engineSel.value === 'auto') {
+        try {
+          const res = await fetch('/recommended-engine');
+          const data = await res.json();
+          engineInfo.textContent = `Will use: ${data.recommended_engine}`;
+          engineInfo.style.color = '#28a745';
+        } catch (e) {
+          engineInfo.textContent = 'Auto-detection failed, will use kokoro';
+          engineInfo.style.color = '#dc3545';
+        }
+      } else {
+        engineInfo.textContent = '';
+      }
+    }
+    
+    // Update engine info when selection changes
+    document.getElementById('engine').addEventListener('change', updateEngineInfo);
+    
+    // Update on page load
+    updateEngineInfo();
+  </script>
+</body>
+
+</html>
