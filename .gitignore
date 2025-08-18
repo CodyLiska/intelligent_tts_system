@@ -152,3 +152,4 @@ mfa_*/
 *_copy.py
 *_backup.*
 *.bak
+third_party/CosyVoice/
