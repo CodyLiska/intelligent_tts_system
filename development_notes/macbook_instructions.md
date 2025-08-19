@@ -14,16 +14,19 @@
   3. Install core dependencies
      - pip install -r requirements.txt
 
-  4. Download CosyVoice2 Models (Required for High-Quality TTS)
+  4. Download CosyVoice Source Code (Required for CosyVoice2 TTS)
+     - First, you need the CosyVoice source code:
+     - cd third_party
+     - git clone https://github.com/FunAudioLLM/CosyVoice.git
+     - cd ..
+
+  5. Download CosyVoice2 Model Weights
      - You'll need to manually download the CosyVoice2 models since they're large files (several GB):
 
-  5. Create the models directory
-     - mkdir -p third_party/CosyVoice/pretrained_models/CosyVoice2-0.5B
-
   >Option A: Download via git (if you have git-lfs)
-  >- cd third_party
+  >- cd third_party/CosyVoice/pretrained_models
   >- git clone https://huggingface.co/FunAudioLLM/CosyVoice2-0.5B
-  >- mv CosyVoice2-0.5B CosyVoice/pretrained_models/CosyVoice2-0.5B
+  >- cd ../../..
 
   >Option B: Manual download from HuggingFace
   >- Go to: https://huggingface.co/FunAudioLLM/CosyVoice2-0.5B
@@ -42,7 +45,7 @@
      - brew install ffmpeg
 
   9. For MFA alignment (optional but recommended for subtitles)
-     - pip install montreal-forced-alignment
+     - pip install Montreal-Forced-Aligner
 
   10. Verify Installation and Test the system
   - python -c "from app.services.models import get_recommended_engine print(f'Recommended engine: {get_recommended_engine()}')"
@@ -71,6 +74,12 @@
     - Place in: data/refs/ref.wav
 
   🚨 Troubleshooting
+
+  #### If you get "no module named 'cosyvoice'" error:
+
+  - You're missing the CosyVoice source code
+  - Make sure you ran: `git clone https://github.com/FunAudioLLM/CosyVoice.git` in the third_party/ directory
+  - Check that third_party/CosyVoice/cosyvoice/ directory exists with Python files
 
   #### If CosyVoice2 models aren't found:
 
