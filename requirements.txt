@@ -1,34 +1,58 @@
-# Core dependencies
-numpy>=1.24.0,<2.0.0
-soundfile>=0.12.1
+# Core TTS Dependencies
 torch>=2.0.0
 torchaudio>=2.0.0
-psutil>=5.9.0
+numpy>=1.24.0  # Compatible with Python 3.12
 
-# Text extraction and processing
-pymupdf>=1.24.0
-pypdf>=4.3.0
+# Kokoro TTS Engine
+# Note: Current kokoro-tts package has different API than expected by this codebase
+# The codebase expects hexgrad/Kokoro-82M which may need manual installation
+# kokoro-tts  # Install manually if needed
+
+# Web Framework and API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+starlette>=0.27.0
+
+# Audio Processing
+soundfile>=0.12.0
+librosa>=0.10.0
+
+# Text Processing and Document Parsing
+pypdf>=3.17.0
+pymupdf>=1.23.0  # fitz - alternative PDF reader
 ebooklib>=0.18
 beautifulsoup4>=4.12.0
-nltk>=3.9.0
-textgrid>=1.6.0
 
-# TTS engines
-kokoro>=0.9.4
+# System Monitoring and Utilities
+psutil>=5.9.0
 
-# Web API framework
-fastapi>=0.112.0
-uvicorn[standard]>=0.30.0
-python-multipart>=0.0.6  # Required for FastAPI file uploads
+# CosyVoice2 Dependencies (optional but recommended)
+modelscope>=1.11.0
+conformer==0.3.2
+hydra-core>=1.3.0
+lightning>=2.0.0
+phonemizer>=3.2.0
+diffusers>=0.29.0
+transformers>=4.51.0
+omegaconf>=2.3.0
+onnx>=1.16.0
+onnxruntime>=1.18.0
+matplotlib>=3.7.0  # Required for CosyVoice2
+gradio>=5.4.0  # Web interface components
 
-# Production server (optional)
-waitress>=2.1.0
+# Montreal Forced Alignment (optional - install manually if needed)
+# montreal-forced-alignment  # Comment: Install via conda if needed: conda install -c conda-forge montreal-forced-alignment
 
-# MFA alignment (optional - install separately if needed)
-# montreal-forced-alignment>=3.0.0
+# Text Processing
+nltk>=3.8
 
-# CosyVoice2 dependencies (auto-installed when third_party models are present)
-# Note: These are automatically installed when CosyVoice2 models are detected
-# diffusers
-# transformers  
-# onnxruntime
+# Machine Learning and AI
+peft>=0.17.0  # Fixes LoRA deprecation warnings
+
+# Additional Dependencies
+wget>=3.2  # Required for CosyVoice2 model downloads
+pyarrow>=18.0.0  # Required for CosyVoice2 dataset processing
+
+# Note: Some packages may be auto-installed with the TTS engines
+# whisper dependency is handled by openai-whisper to avoid conflicts
+openai-whisper>=20231117

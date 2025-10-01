@@ -360,18 +360,50 @@ def stream_cosyvoice2_cross(
     else:
         ref_16k = np.zeros(16000, dtype=np.float32)
 
-    # normalize loudness & ensure CPU torch tensor [1, T]
+    # normalize loudness & create torch tensor [1, T] on model device
     ref_16k = _rms_normalize(ref_16k, target_dbfs=-18.0)
     ref_t = torch.from_numpy(ref_16k).to(
-        dtype=torch.float32, device="cpu").unsqueeze(0).contiguous()
+        dtype=torch.float32, device=cv.device).unsqueeze(0).contiguous()
 
     # ensure minimum length for frontend windowing
     if ref_t.shape[1] < 16000:  # ~1s minimum
-        pad = torch.zeros(1, 16000 - ref_t.shape[1], dtype=torch.float32)
+        pad = torch.zeros(1, 16000 - ref_t.shape[1], dtype=torch.float32, device=cv.device)
         ref_t = torch.cat([ref_t, pad], dim=1)
 
     print(f"[Cosy] start text='{text[:60]}' ref={'mem' if ref_wav is not None else ref_path} "
           f"ref_sh={tuple(ref_t.shape)} dtype={ref_t.dtype} dev={ref_t.device} speed={speed}")
+
+    # Debug: Check device states before inference
+    print(f"[DEBUG] Model device: {cv.device}")
+    print(f"[DEBUG] Input tensor device: {ref_t.device}")
+
+    # Deep device inspection
+    def check_all_devices(module, name):
+        cpu_params = []
+        mps_params = []
+        for param_name, param in module.named_parameters():
+            if param.device.type == 'cpu':
+                cpu_params.append(f"{name}.{param_name}")
+            elif param.device.type == 'mps':
+                mps_params.append(f"{name}.{param_name}")
+
+        for buffer_name, buffer in module.named_buffers():
+            if buffer.device.type == 'cpu':
+                cpu_params.append(f"{name}.{buffer_name}")
+            elif buffer.device.type == 'mps':
+                mps_params.append(f"{name}.{buffer_name}")
+
+        if cpu_params:
+            print(f"[DEBUG] CPU parameters in {name}: {cpu_params[:5]}...")  # Show first 5
+        if mps_params:
+            print(f"[DEBUG] MPS parameters in {name}: {len(mps_params)} total")
+
+    if hasattr(cv.model, 'llm'):
+        check_all_devices(cv.model.llm, "LLM")
+    if hasattr(cv.model, 'flow'):
+        check_all_devices(cv.model.flow, "Flow")
+    if hasattr(cv.model, 'hift'):
+        check_all_devices(cv.model.hift, "Hift")
 
     # --- call Cosy (prefer positional; fall back to named) ---
     try:
@@ -500,12 +532,23 @@ def synthesize_cosyvoice2_chunks(
     target_sr = 24000
 
     # Process chunks more efficiently
-    print(f"[CosyVoice2] Processing {len(chunks)} chunks on CPU...")
-    
-    # Set CPU optimization flags
+    import torch
     import os
-    os.environ["OMP_NUM_THREADS"] = str(min(8, os.cpu_count() or 4))
-    os.environ["MKL_NUM_THREADS"] = str(min(8, os.cpu_count() or 4))
+    
+    # Detect actual device being used
+    if hasattr(cv, 'device'):
+        device_name = str(cv.device)
+    elif torch.backends.mps.is_available():
+        device_name = "MPS (Apple Silicon)"
+    elif torch.cuda.is_available():
+        device_name = f"CUDA ({torch.cuda.get_device_name(0)})"
+    else:
+        device_name = "CPU"
+        # Set CPU optimization flags only if actually using CPU
+        os.environ["OMP_NUM_THREADS"] = str(min(8, os.cpu_count() or 4))
+        os.environ["MKL_NUM_THREADS"] = str(min(8, os.cpu_count() or 4))
+    
+    print(f"[CosyVoice2] Processing {len(chunks)} chunks on {device_name}...")
     
     for chunk_text in chunks:
         try:
@@ -554,6 +597,19 @@ def synthesize_cosyvoice2_chunks(
                     tmp_sr = max(8000, min(96000, tmp_sr))
                     arr = _resample_hq(arr, target_sr, tmp_sr)
                     arr = _resample_hq(arr, tmp_sr, target_sr)
+                
+                # Normalize audio to prevent distortion and clipping
+                # Target RMS level around 0.05 for good quality without distortion
+                if len(arr) > 0:
+                    current_rms = np.sqrt(np.mean(arr**2))
+                    if current_rms > 0.001:  # Avoid division by zero for very quiet audio
+                        target_rms = 0.05  # Conservative target to prevent distortion
+                        if current_rms > target_rms:
+                            normalization_factor = target_rms / current_rms
+                            arr = arr * normalization_factor
+                
+                # Final safety clipping to prevent any overflow
+                arr = np.clip(arr, -0.95, 0.95)
                 
                 wavs.append(arr)
             else:

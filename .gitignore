@@ -154,3 +154,4 @@ mfa_*/
 *.bak
 third_party/CosyVoice/
 /development_notes/*
+CLAUDE.md

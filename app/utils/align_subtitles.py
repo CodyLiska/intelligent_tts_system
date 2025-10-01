@@ -28,22 +28,36 @@ def _fmt_srt(t: float) -> str:
 
 
 def _conda_exe_candidates() -> List[str]:
-    return list(filter(os.path.isfile, [
+    # Filter out None values first, then check if files exist
+    candidates = [
         os.environ.get("CONDA_EXE"),
         r"C:\Users\hxchi\miniconda3\Scripts\conda.exe",
         r"C:\ProgramData\miniconda3\Scripts\conda.exe",
         r"C:\miniconda3\Scripts\conda.exe",
-    ]))
+    ]
+    return [c for c in candidates if c is not None and os.path.isfile(c)]
 
 
 def _mfa_cmd(conda_env: str = "aligner") -> List[str]:
     # Prefer conda run to avoid DLL path issues on Windows
     for c in _conda_exe_candidates():
-        return [c, "run", "-n", conda_env, "mfa"]
+        if c and os.path.isfile(c):  # Validate conda executable exists
+            return [c, "run", "-n", conda_env, "mfa"]
+    
     mfa = os.environ.get("MFA_EXE") or shutil.which("mfa")
     if not mfa:
         raise FileNotFoundError(
             "MFA not found. Install via conda or set MFA_EXE.")
+    
+    # Validate MFA executable works before returning
+    try:
+        result = subprocess.run([str(mfa), "--help"], 
+                              capture_output=True, timeout=10, text=True)
+        if result.returncode != 0:
+            raise FileNotFoundError(f"MFA executable at {mfa} returned error: {result.stderr}")
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, OSError) as e:
+        raise FileNotFoundError(f"MFA executable at {mfa} is not functional: {e}")
+    
     # Best-effort DLL path injection for direct exe use
     try:
         root = Path(mfa).parent.parent

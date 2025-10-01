@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import io
 import os
+
+# Disable tokenizers parallelism warning
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import ssl
 import tempfile
 import threading
@@ -446,7 +449,7 @@ async def synthesize_full(
                         single_speaker=True,
                     )
                 except Exception as e:
-                    print(f"MFA alignment failed: {e}")
+                    print(f"MFA alignment failed ({e}), falling back to duration-based timing")
                     # Fallback to duration-based alignment
                     from app.utils.srt import srt_from_durations
                     durations_ms = [int(len(wav) / sr * 1000) for wav in wavs]
@@ -628,9 +631,14 @@ async def startup_event():
 
     # Log system info
     if torch.cuda.is_available():
-        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        print(f"GPU: {torch.cuda.get_device_name(0)} (CUDA)")
         print(
             f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.2f} GB")
+    elif torch.backends.mps.is_available():
+        print("GPU: Apple Silicon MPS (Metal Performance Shaders)")
+        import psutil
+        memory_gb = psutil.virtual_memory().total / (1024**3)
+        print(f"Unified Memory: {memory_gb:.1f} GB")
     else:
         print("GPU: Not available, using CPU")
 

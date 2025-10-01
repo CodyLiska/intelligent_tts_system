@@ -133,7 +133,9 @@ def _pick_device_and_dtype(force_device: str | None = None, force_dtype: str | N
         # Check for Apple Silicon first
         if system == "Darwin" and platform.processor() == 'arm':
             if torch.backends.mps.is_available():
-                logging.info("Using Apple Silicon MPS acceleration")
+                # Enable MPS fallback for unsupported operations
+                os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+                logging.info("Using Apple Silicon MPS acceleration with CPU fallback enabled")
                 dev = "mps"
             else:
                 dev = "cpu"
@@ -422,7 +424,26 @@ def preload_models():
     def load_cosy():
         try:
             import numpy as np
+            import sys
+            import os
+            from pathlib import Path
+            
+            # Test if the critical import works first
+            try:
+                from transformers import Qwen2ForCausalLM
+            except ImportError as import_e:
+                logging.warning(f"CosyVoice2 preload skipped due to import issue: {import_e}")
+                logging.info("CosyVoice2 will initialize on first request instead")
+                return
+            
+            # Ensure CosyVoice path is available in executor context
+            cosy_path = str(Path(__file__).parent.parent.parent / "third_party" / "CosyVoice")
+            if cosy_path not in sys.path:
+                sys.path.insert(0, cosy_path)
+            
             cv = get_cosyvoice2()
+            logging.info("CosyVoice2 loaded successfully in preload")
+            
             # Warm up with a dummy inference to initialize CUDA kernels
             ref_dummy = torch.zeros(1, 16000, dtype=torch.float32)
             try:
@@ -432,7 +453,8 @@ def preload_models():
             except Exception as warmup_e:
                 logging.warning(f"CosyVoice2 warmup failed: {warmup_e}")
         except Exception as e:
-            logging.error(f"Failed to preload CosyVoice2: {e}")
+            logging.warning(f"CosyVoice2 preload had issues: {e}")
+            logging.info("CosyVoice2 will initialize on first request instead")
 
     t1 = threading.Thread(target=load_kokoro)
     t2 = threading.Thread(target=load_cosy)
