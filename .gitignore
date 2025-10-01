@@ -153,3 +153,4 @@ mfa_*/
 *_backup.*
 *.bak
 third_party/CosyVoice/
+/development_notes/*
